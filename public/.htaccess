@@ -1,0 +1,155 @@
+# ========================================
+# .htaccess สำหรับระบบ CAMELS Analysis
+# Apache 2.4+ / XAMPP
+# ========================================
+
+# เปิดใช้งาน Rewrite Engine
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # กำหนด Base Path (ปรับตาม installation path)
+    # ถ้าติดตั้งใน localhost/camels_coop/ ให้ใช้: RewriteBase /camels_coop/public/
+    # ถ้าติดตั้งใน root ให้ใช้: RewriteBase /
+    RewriteBase /camels_coop/public/
+    
+    # ถ้าไฟล์หรือโฟลเดอร์มีอยู่จริง ให้เข้าถึงได้โดยตรง
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # ส่ง request ทั้งหมดไปที่ index.php
+    RewriteRule ^(.*)$ index.php [L,QSA]
+</IfModule>
+
+# ========================================
+# Security Headers
+# ========================================
+
+# ป้องกัน Directory Listing
+Options -Indexes
+
+# ป้องกัน access ไฟล์ที่ไม่ต้องการ
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# ป้องกัน access ไฟล์ sensitive
+<FilesMatch "\.(env|sql|log|md|json|lock)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# ========================================
+# Security Headers (HTTP)
+# ========================================
+
+<IfModule mod_headers.c>
+    # ป้องกัน XSS
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # ป้องกัน Clickjacking
+    Header set X-Frame-Options "SAMEORIGIN"
+    
+    # ป้องกัน MIME Type Sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Referrer Policy
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Content Security Policy (ปรับตามความต้องการ)
+    # Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com;"
+</IfModule>
+
+# ========================================
+# PHP Settings
+# ========================================
+
+<IfModule mod_php.c>
+    # ซ่อน PHP Version
+    php_flag expose_php Off
+    
+    # เพิ่มขนาด Upload (ปรับตามความต้องการ)
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    
+    # เพิ่ม Memory Limit
+    php_value memory_limit 256M
+    
+    # Session Settings
+    php_value session.cookie_httponly 1
+    php_value session.use_only_cookies 1
+</IfModule>
+
+# ========================================
+# Compression (ประหยัด Bandwidth)
+# ========================================
+
+<IfModule mod_deflate.c>
+    # Compress HTML, CSS, JavaScript, Text, XML
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
+# ========================================
+# Browser Caching
+# ========================================
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Images
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    
+    # CSS and JavaScript
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    
+    # Fonts
+    ExpiresByType font/ttf "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    
+    # Default
+    ExpiresDefault "access plus 1 week"
+</IfModule>
+
+# ========================================
+# UTF-8 Encoding
+# ========================================
+
+AddDefaultCharset UTF-8
+<IfModule mod_mime.c>
+    AddCharset UTF-8 .html .css .js .xml .json .rss .atom
+</IfModule>
+
+# ========================================
+# Error Pages (Custom)
+# ========================================
+
+# ErrorDocument 400 /error/400.php
+# ErrorDocument 401 /error/401.php
+# ErrorDocument 403 /error/403.php
+# ErrorDocument 404 /error/404.php
+# ErrorDocument 500 /error/500.php
+
+# ========================================
+# Force HTTPS (ถ้าใช้ SSL)
+# ========================================
+
+# <IfModule mod_rewrite.c>
+#     RewriteEngine On
+#     RewriteCond %{HTTPS} off
+#     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>
